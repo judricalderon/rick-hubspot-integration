@@ -8,15 +8,20 @@ export async function associateContactsToCompanies() {
   const results = [];
 
   for (const char of characters) {
-    const contact = contacts.find(c => c.properties?.firstname === char.name);
-    const company = companies.find(c => c.properties?.name === char.location.name);
+    const contact = contacts.find(c => c.properties?.firstname?.toLowerCase() === char.name.toLowerCase());
+    const company = companies.find(c => c.properties?.name?.toLowerCase() === char.location.name.toLowerCase());
 
     if (contact && company) {
       try {
         await associateContactToCompany(contact.id, company.id);
         results.push({ contact: char.name, company: char.location.name, status: 'associated' });
       } catch (error: any) {
-        results.push({ contact: char.name, company: char.location.name, status: 'error', error: error.message });
+        results.push({
+          contact: char.name,
+          company: char.location.name,
+          status: 'error',
+          error: error.message || 'Unknown error'
+        });
       }
     } else {
       results.push({ contact: char.name, company: char.location.name, status: 'not found' });
