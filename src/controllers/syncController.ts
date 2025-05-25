@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { hubspotClient } from '../services/client/hubspot/hubspotClient';
 import { hubspotClientMirror } from '../services/client/hubspot/hubspotClientMirror';
 import { syncAllContactsFromMainToMirror } from '../services/internal/syncAllContactsService';
+import { syncAllCompaniesFromMainToMirror } from '../services/internal/syncAllCompaniesService';
 
 function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
   const cleaned: { [key: string]: string } = {};
@@ -48,5 +49,20 @@ export const syncAllContacts = async (req: Request, res: Response) => {
     res.status(200).json({ message: 'Contactos sincronizados en masa', data: result });
   } catch (error: any) {
     res.status(500).json({ message: 'Error al sincronizar todos los contactos', error: error.message });
+  }
+};
+
+export const syncAllCompanies = async (req: Request, res: Response) => {
+  try {
+    const result = await syncAllCompaniesFromMainToMirror();
+    res.status(200).json({
+      message: 'Compañías sincronizadas en masa',
+      data: result
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      message: 'Error al sincronizar todas las compañías',
+      error: error.message
+    });
   }
 };
