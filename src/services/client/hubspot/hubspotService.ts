@@ -1,4 +1,4 @@
-import { hubspotClient } from './hubspot.client';
+import { hubspotClient } from './hubspotClient';
 import { SimplePublicObject } from '@hubspot/api-client/lib/codegen/crm/companies';
 import { SimplePublicObject as ContactObject } from '@hubspot/api-client/lib/codegen/crm/contacts';
 

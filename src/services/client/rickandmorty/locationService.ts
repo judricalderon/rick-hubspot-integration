@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { Character } from '../../../types/character.types';
-import { Location } from '../../../types/location.types';
+import { Character } from '../../../types/characterTypes';
+import { Location } from '../../../types/locationTypes';
 
 export async function getUniqueLocations(characters: Character[]): Promise<Location[]> {
   const locationUrls = Array.from(

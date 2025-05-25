@@ -1,24 +1,30 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { getFilteredCharacters } from './services/client/rickandmorty/character.service';
-import { getAllContacts } from './services/client/hubspot/hubspot.service';
-import { createContactsFromCharacters } from './services/internal/character.to.contact.service';
-import { createCompaniesFromLocations } from './services/internal/location.to.company.service';
-import { associateContactsToCompanies } from './services/internal/associate.contact.company.service';
-import { deleteAllContacts } from './services/client/hubspot/hubspot.service';
 
-dotenv.config(); // Carga las variables de entorno desde .env
-const app = express(); // Se instancia la aplicación
+import syncRoutes from './routes/syncRoutes';
+import { getFilteredCharacters } from './services/client/rickandmorty/characterService';
+import { getAllContacts, deleteAllContacts } from './services/client/hubspot/hubspotService';
+import { createContactsFromCharacters } from './services/internal/characterToContactService';
+import { createCompaniesFromLocations } from './services/internal/locationToCompanyService';
+import { associateContactsToCompanies } from './services/internal/associateContactCompanyService';
+
+dotenv.config();
+
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json()); // Middleware para recibir JSON
+// Middleware para parsear JSON
+app.use(express.json());
 
-// 🔹 Ruta de prueba para verificar que el servidor está corriendo
+// Rutas de sincronización externa
+app.use('/sync', syncRoutes);
+
+// 🔹 Ruta base
 app.get('/', (_, res) => {
   res.send('🚀 Rick & HubSpot Integration API funcionando');
 });
 
-// 🔹 Obtener personajes filtrados (solo los de ID primo o 1)
+// 🔹 Obtener personajes filtrados (solo IDs primos o 1)
 app.get('/characters', async (_, res) => {
   try {
     const characters = await getFilteredCharacters();
@@ -40,7 +46,7 @@ app.get('/hubspot/contacts', async (_, res) => {
   }
 });
 
-// 🔹 Sincronizar personajes como contactos en HubSpot
+// 🔹 Crear contactos a partir de personajes
 app.get('/hubspot/sync/contacts', async (_, res) => {
   try {
     const result = await createContactsFromCharacters();
@@ -51,7 +57,7 @@ app.get('/hubspot/sync/contacts', async (_, res) => {
   }
 });
 
-// 🔹 Sincronizar ubicaciones como compañías en HubSpot
+// 🔹 Crear compañías a partir de ubicaciones
 app.get('/hubspot/sync/companies', async (_, res) => {
   try {
     const result = await createCompaniesFromLocations();
@@ -62,7 +68,7 @@ app.get('/hubspot/sync/companies', async (_, res) => {
   }
 });
 
-// 🔹 Asociar contactos con compañías en HubSpot
+// 🔹 Asociar contactos con compañías
 app.get('/hubspot/sync/associations', async (_, res) => {
   try {
     const result = await associateContactsToCompanies();
@@ -73,9 +79,7 @@ app.get('/hubspot/sync/associations', async (_, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+// 🔹 Eliminar todos los contactos
 app.delete('/hubspot/delete/contacts', async (_, res) => {
   try {
     const result = await deleteAllContacts();
@@ -83,4 +87,8 @@ app.delete('/hubspot/delete/contacts', async (_, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Error al eliminar contactos' });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

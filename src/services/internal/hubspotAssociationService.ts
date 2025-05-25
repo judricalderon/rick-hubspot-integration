@@ -1,4 +1,4 @@
-import { hubspotClient } from '../client/hubspot/hubspot.client';
+import { hubspotClient } from '../client/hubspot/hubspotClient';
 
 /**
  * Asocia un contacto con una compañía en HubSpot, usando la relación company_to_contact

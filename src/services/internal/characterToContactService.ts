@@ -1,5 +1,5 @@
-import { getFilteredCharacters } from '../client/rickandmorty/character.service';
-import { createContact } from '../client/hubspot/hubspot.service';
+import { getFilteredCharacters } from '../client/rickandmorty/characterService';
+import { createContact } from '../client/hubspot/hubspotService';
 
 export async function createContactsFromCharacters() {
   const characters = await getFilteredCharacters();

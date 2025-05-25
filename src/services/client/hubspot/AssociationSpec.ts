@@ -1,4 +1,4 @@
-import { hubspotClient } from './hubspot.client';
+import { hubspotClient } from './hubspotClient';
 
 export async function associateContactToCompany(contactId: string, companyId: string) {
   const body = {

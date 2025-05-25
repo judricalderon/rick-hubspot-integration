@@ -1,5 +1,5 @@
-import { getAllLocations } from '../client/rickandmorty/location.service';
-import { createCompany } from '../client/hubspot/hubspot.service';
+import { getAllLocations } from '../client/rickandmorty/locationService';
+import { createCompany } from '../client/hubspot/hubspotService';
 
 export async function createCompaniesFromLocations() {
   const locations = await getAllLocations();
