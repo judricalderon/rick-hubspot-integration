@@ -1,6 +1,5 @@
 import { hubspotClient } from './hubspot.client';
 
-
 export async function associateContactToCompany(contactId: string, companyId: string) {
   const body = {
     inputs: [
@@ -10,7 +9,7 @@ export async function associateContactToCompany(contactId: string, companyId: st
         types: [
           {
             associationCategory: 'HUBSPOT_DEFINED',
-            associationTypeId: 1
+            associationTypeId: 1 // 🔗 company_to_contact
           }
         ]
       }

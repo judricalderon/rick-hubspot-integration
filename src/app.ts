@@ -5,6 +5,7 @@ import { getAllContacts } from './services/client/hubspot/hubspot.service';
 import { createContactsFromCharacters } from './services/internal/character.to.contact.service';
 import { createCompaniesFromLocations } from './services/internal/location.to.company.service';
 import { associateContactsToCompanies } from './services/internal/associate.contact.company.service';
+import { deleteAllContacts } from './services/client/hubspot/hubspot.service';
 
 dotenv.config(); // Carga las variables de entorno desde .env
 const app = express(); // Se instancia la aplicación
@@ -74,4 +75,12 @@ app.get('/hubspot/sync/associations', async (_, res) => {
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+app.delete('/hubspot/delete/contacts', async (_, res) => {
+  try {
+    const result = await deleteAllContacts();
+    res.json({ message: 'Contactos eliminados', data: result });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar contactos' });
+  }
 });
