@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { CharacterApiResponse, Character } from '../../types/character.types';
+import { CharacterApiResponse, Character } from '../../../types/characterTypes';
 
 function isPrime(n: number): boolean {
   if (n <= 1) return false;
