@@ -93,19 +93,6 @@ When a contact or company is created in the source account, an event is sent to 
 
 
 
-🧠 Diagram
-
-
-[Rick and Morty API]
-         ↓
-[Migration Script] → [HubSpot Source (Contacts + Companies)]
-                                 ↓
-                             Webhooks
-                                 ↓
-           [Your API on Render] → [HubSpot Mirror (Replication)]
-
-
-
 
 🧑‍💻 Author
 Juan David Rivera Calderón
