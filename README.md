@@ -53,7 +53,7 @@ Create a `.env` file with the following content:
 ```env
 HUBSPOT_TOKEN=your_source_account_token
 HUBSPOT_MIRROR_TOKEN=your_mirror_account_token
-
+```
 🧪 How to Run Locally
 
 1. Clone the repository:
