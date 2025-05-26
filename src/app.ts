@@ -8,6 +8,7 @@ import { createContactsFromCharacters } from './services/internal/characterToCon
 import { createCompaniesFromLocations } from './services/internal/locationToCompanyService';
 import { associateContactsToCompanies } from './services/internal/associateContactCompanyService';
 
+
 dotenv.config();
 
 const app = express();

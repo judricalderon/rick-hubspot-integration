@@ -4,6 +4,8 @@ import { hubspotClientMirror } from '../services/client/hubspot/hubspotClientMir
 import { syncAllContactsFromMainToMirror } from '../services/internal/syncAllContactsService';
 import { syncAllCompaniesFromMainToMirror } from '../services/internal/syncAllCompaniesService';
 
+
+
 function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
   const cleaned: { [key: string]: string } = {};
   const readOnlyProps = ['createdate', 'hs_object_id', 'lastmodifieddate'];
@@ -66,3 +68,4 @@ export const syncAllCompanies = async (req: Request, res: Response) => {
     });
   }
 };
+

@@ -26,9 +26,9 @@ export async function associateContactsToCompanies() {
   const results = [];
 
   // Mostrar contactos y compañías disponibles (normalizados)
-  console.log('\n🔍 Contactos disponibles:');
+  
   contacts.forEach(c => console.log('👤', normalize(c.properties?.firstname)));
-  console.log('\n🏢 Compañías disponibles:');
+ 
   companies.forEach(c => console.log('🏢', normalize(c.properties?.name)));
 
   // Procesar cada personaje
@@ -36,11 +36,10 @@ export async function associateContactsToCompanies() {
     const charName = normalize(char.name);
     const locationName = normalize(char.location?.name);
 
-    console.log(`\n🎯 Character: "${charName}" | Location: "${locationName}"`);
+    
 
     // Ubicación inválida
     if (!locationName || locationName === 'unknown') {
-      console.log(`⛔ Ubicación inválida para ${char.name}: "${char.location.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'invalid location' });
       continue;
     }
@@ -51,7 +50,6 @@ export async function associateContactsToCompanies() {
     );
 
     if (matchingContacts.length === 0) {
-      console.log(`❌ Contacto no encontrado para: ${char.name}`);
       results.push({ contact: char.name, company: char.location.name, status: 'contact not found' });
       continue;
     }
@@ -62,7 +60,6 @@ export async function associateContactsToCompanies() {
     );
 
     if (!company) {
-      console.log(`❌ Compañía no encontrada para: ${char.location.name}`);
       results.push({ contact: char.name, company: char.location.name, status: 'company not found' });
       continue;
     }
@@ -71,14 +68,12 @@ export async function associateContactsToCompanies() {
     for (const contact of matchingContacts) {
       try {
         await associateContactToCompany(contact.id, company.id);
-        console.log(`✅ Asociado: ${char.name} → ${char.location.name}`);
         results.push({
           contact: char.name,
           company: char.location.name,
           status: 'associated'
         });
       } catch (error: any) {
-        console.error(`💥 Error asociando ${char.name} con ${char.location.name}:`, error.message);
         results.push({
           contact: char.name,
           company: char.location.name,

@@ -3,6 +3,8 @@ import { syncContact, syncCompany } from '../controllers/syncController';
 import { syncAllContacts } from '../controllers/syncController';
 import { syncAllCompanies } from '../controllers/syncController';
 
+
+
 const router = express.Router();
 
 router.post('/contact', syncContact);
