@@ -8,21 +8,64 @@ import { createContactsFromCharacters } from './services/internal/characterToCon
 import { createCompaniesFromLocations } from './services/internal/locationToCompanyService';
 import { associateContactsToCompanies } from './services/internal/associateContactCompanyService';
 
+import { hubspotClient } from './services/client/hubspot/hubspotClient';
+import { hubspotClientMirror } from './services/client/hubspot/hubspotClientMirror';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para parsear JSON
 app.use(express.json());
 
 // Rutas de sincronización externa
 app.use('/sync', syncRoutes);
 
-// 🔹 Ruta base
+// 🔹 Ruta base (GET)
 app.get('/', (_, res) => {
   res.send('🚀 Rick & HubSpot Integration API funcionando');
+});
+
+// 🔹 Endpoint para webhooks (POST)
+app.post('/', async (req, res) => {
+  const events = req.body;
+
+  console.log('📨 Webhook recibido:', JSON.stringify(events, null, 2));
+
+  const readOnlyFields = ['createdate', 'hs_object_id', 'lastmodifieddate'];
+
+  function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
+    const cleaned: { [key: string]: string } = {};
+    for (const key in properties) {
+      const value = properties[key];
+      if (value !== null && !readOnlyFields.includes(key)) {
+        cleaned[key] = value;
+      }
+    }
+    return cleaned;
+  }
+
+  try {
+    for (const event of events) {
+      const { subscriptionType, objectId } = event;
+
+      if (subscriptionType === 'contact.creation') {
+        const contact = await hubspotClient.crm.contacts.basicApi.getById(objectId);
+        const cleaned = cleanProperties(contact.properties);
+        await hubspotClientMirror.crm.contacts.basicApi.create({ properties: cleaned });
+
+      } else if (subscriptionType === 'company.creation') {
+        const company = await hubspotClient.crm.companies.basicApi.getById(objectId);
+        const cleaned = cleanProperties(company.properties);
+        await hubspotClientMirror.crm.companies.basicApi.create({ properties: cleaned });
+      }
+    }
+
+    res.status(200).send('✅ Webhook procesado');
+  } catch (error) {
+    console.error('❌ Error procesando webhook:', error);
+    res.status(500).send('Error al procesar el webhook');
+  }
 });
 
 // 🔹 Obtener personajes filtrados (solo IDs primos o 1)
