@@ -1,6 +1,5 @@
 import { getFilteredCharacters } from '../client/rickandmorty/characterService';
 import { hubspotClient } from '../client/hubspot/hubspotClient';
-import { hubspotClientMirror } from '../client/hubspot/hubspotClientMirror';
 
 export async function createContactsFromCharacters() {
   const characters = await getFilteredCharacters();
@@ -10,7 +9,7 @@ export async function createContactsFromCharacters() {
   for (const character of characters) {
     // Separar nombre en firstname y lastname
     const nameParts = character.name.trim().split(' ');
-    const [firstname, ...lastnameParts] = character.name.trim().split(' ');
+    const [firstname, ...lastnameParts] = nameParts;
     const lastname = lastnameParts.join(' ');
 
     // Normalizar status y gender con valores válidos
@@ -30,17 +29,13 @@ export async function createContactsFromCharacters() {
     console.log(`📤 ${count}. Enviando contacto ${character.name} con propiedades:`, properties);
 
     try {
-      // Crear en la cuenta MAIN
+      // Solo se crea en la cuenta MAIN
       const main = await hubspotClient.crm.contacts.basicApi.create({ properties });
-
-      // Crear también en la cuenta MIRROR
-      const mirror = await hubspotClientMirror.crm.contacts.basicApi.create({ properties });
 
       results.push({
         name: character.name,
         mainId: main.id,
-        mirrorId: mirror.id,
-        status: 'synced'
+        status: 'created (main only)'
       });
     } catch (error: any) {
       results.push({
@@ -55,4 +50,3 @@ export async function createContactsFromCharacters() {
 
   return results;
 }
-
