@@ -10,7 +10,7 @@ import {
  */
 function normalize(text?: string | null): string {
   return (text || '')
-    .normalize('NFD')                // descompone letras con acentos
+    .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // elimina los acentos
     .toLowerCase()
     .trim();
@@ -25,48 +25,47 @@ export async function associateContactsToCompanies() {
   const companies = await getAllCompanies();
   const results = [];
 
-  // Mostrar contactos y compañías disponibles (normalizados)
-  
-  contacts.forEach(c => console.log('👤', normalize(c.properties?.firstname)));
- 
-  companies.forEach(c => console.log('🏢', normalize(c.properties?.name)));
+  console.log(`🔍 Total personajes: ${characters.length}`);
+  console.log(`👥 Total contactos: ${contacts.length}`);
+  console.log(`🏢 Total compañías: ${companies.length}`);
 
-  // Procesar cada personaje
   for (const char of characters) {
-    const charName = normalize(char.name);
+    const charNameNormalized = normalize(char.name);
     const locationName = normalize(char.location?.name);
 
-    
-
-    // Ubicación inválida
     if (!locationName || locationName === 'unknown') {
+      console.warn(`⚠️ Ubicación inválida para personaje "${char.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'invalid location' });
       continue;
     }
 
-    // Buscar coincidencias por nombre de contacto
-    const matchingContacts = contacts.filter(
-      c => normalize(c.properties?.firstname) === charName
-    );
+    // Buscar coincidencias por nombre completo
+    const matchingContacts = contacts.filter(contact => {
+      const fullName = `${contact.properties?.firstname || ''} ${contact.properties?.lastname || ''}`.trim();
+      const normalizedFullName = normalize(fullName);
+      const match = normalizedFullName === charNameNormalized;
+      console.log(`🔍 Comparando: contacto="${normalizedFullName}" vs personaje="${charNameNormalized}" → match: ${match}`);
+      return match;
+    });
 
     if (matchingContacts.length === 0) {
+      console.warn(`❌ Contacto no encontrado para "${char.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'contact not found' });
       continue;
     }
 
-    // Buscar compañía por nombre de ubicación
-    const company = companies.find(
-      c => normalize(c.properties?.name) === locationName
-    );
+    const company = companies.find(c => normalize(c.properties?.name) === locationName);
 
     if (!company) {
+      console.warn(`❌ Compañía no encontrada para "${char.location.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'company not found' });
       continue;
     }
 
-    // Asociar cada contacto encontrado a la compañía
+    // Asociar contacto a la compañía
     for (const contact of matchingContacts) {
       try {
+        console.log(`🔗 Asociando contacto ID ${contact.id} → compañía ID ${company.id}`);
         await associateContactToCompany(contact.id, company.id);
         results.push({
           contact: char.name,
@@ -74,6 +73,7 @@ export async function associateContactsToCompanies() {
           status: 'associated'
         });
       } catch (error: any) {
+        console.error(`❌ Error asociando "${char.name}" a "${char.location.name}": ${error.message}`);
         results.push({
           contact: char.name,
           company: char.location.name,
@@ -84,5 +84,6 @@ export async function associateContactsToCompanies() {
     }
   }
 
+  console.log(`✅ Asociaciones exitosas: ${results.filter(r => r.status === 'associated').length}`);
   return results;
 }
