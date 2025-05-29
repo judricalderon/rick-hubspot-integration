@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { hubspotClient } from '../services/client/hubspot/hubspotClient';
-import { hubspotClientMirror } from '../services/client/hubspot/hubspotClientMirror';
 
 export async function syncCompany(req: Request, res: Response) {
   try {
@@ -17,19 +16,14 @@ export async function syncCompany(req: Request, res: Response) {
       }
     });
 
-    // Crear la compañía en la cuenta mirror
-    const created = await hubspotClientMirror.crm.companies.basicApi.create({
-      properties: sanitizedProps
-    });
-
     return res.status(201).json({
-      message: 'Compañía sincronizada correctamente',
-      data: created
+      message: 'Compañía obtenida correctamente (esperando que el webhook la replique)',
+      data: sanitizedProps
     });
   } catch (error: any) {
-    console.error('❌ Error al sincronizar compañía:', error.message);
+    console.error('❌ Error al obtener compañía:', error.message);
     return res.status(500).json({
-      message: 'Error al sincronizar compañía',
+      message: 'Error al obtener compañía',
       error: error.message
     });
   }

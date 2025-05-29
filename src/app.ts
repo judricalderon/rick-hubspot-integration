@@ -34,9 +34,9 @@ app.post('/', async (req, res) => {
 
   const readOnlyFields = ['createdate', 'hs_object_id', 'lastmodifieddate'];
 
-  function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
+  function cleanProperties(properties: { [key: string]: string | null }, allowed: string[]): { [key: string]: string } {
     const cleaned: { [key: string]: string } = {};
-    for (const key in properties) {
+    for (const key of allowed) {
       const value = properties[key];
       if (value !== null && !readOnlyFields.includes(key)) {
         cleaned[key] = value;
@@ -50,13 +50,47 @@ app.post('/', async (req, res) => {
       const { subscriptionType, objectId } = event;
 
       if (subscriptionType === 'contact.creation') {
-        const contact = await hubspotClient.crm.contacts.basicApi.getById(objectId);
-        const cleaned = cleanProperties(contact.properties);
+        const contact = await hubspotClient.crm.contacts.basicApi.getById(objectId, [
+          'firstname',
+          'lastname',
+          'email',
+          'character_id',
+          'character_species',
+          'status_character',
+          'character_gender'
+        ]);
+
+        const cleaned = cleanProperties(contact.properties, [
+          'firstname',
+          'lastname',
+          'email',
+          'character_id',
+          'character_species',
+          'status_character',
+          'character_gender'
+        ]);
+
+        console.log('🧾 Contacto limpio:', cleaned);
         await hubspotClientMirror.crm.contacts.basicApi.create({ properties: cleaned });
 
       } else if (subscriptionType === 'company.creation') {
-        const company = await hubspotClient.crm.companies.basicApi.getById(objectId);
-        const cleaned = cleanProperties(company.properties);
+        const company = await hubspotClient.crm.companies.basicApi.getById(objectId, [
+          'location_id',
+          'name',
+          'location_type',
+          'dimension',
+          'creation_date'
+        ]);
+
+        const cleaned = cleanProperties(company.properties, [
+          'location_id',
+          'name',
+          'location_type',
+          'dimension',
+          'creation_date'
+        ]);
+
+        console.log('🏢 Compañía limpia:', cleaned);
         await hubspotClientMirror.crm.companies.basicApi.create({ properties: cleaned });
       }
     }
