@@ -2,38 +2,39 @@ import { getFilteredCharacters } from '../client/rickandmorty/characterService';
 import { hubspotClient } from '../client/hubspot/hubspotClient';
 import { hubspotClientMirror } from '../client/hubspot/hubspotClientMirror';
 
-function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
-  const cleaned: { [key: string]: string } = {};
-  const readOnlyProps = ['createdate', 'hs_object_id', 'lastmodifieddate'];
-
-  for (const key in properties) {
-    const value = properties[key];
-    if (value !== null && !readOnlyProps.includes(key)) {
-      cleaned[key] = value;
-    }
-  }
-  return cleaned;
-}
-
 export async function createContactsFromCharacters() {
   const characters = await getFilteredCharacters();
   const results = [];
+  let count = 1;
 
   for (const character of characters) {
+    // Separar nombre en firstname y lastname
+    const nameParts = character.name.trim().split(' ');
+    const firstname = nameParts[0];
+    const lastname = nameParts[1] || '';
+
+    // Normalizar status y gender con valores válidos
+    const status = ['Alive', 'Dead', 'unknown'].includes(character.status) ? character.status : 'unknown';
+    const gender = ['Female', 'Male', 'Genderless', 'unknown'].includes(character.gender) ? character.gender : 'unknown';
+
     const properties = {
-      firstname: character.name,
+      character_id: character.id.toString(),
+      firstname,
+      lastname,
+      status_character: status,
+      character_species: character.species,
+      character_gender: gender,
       email: `${character.name.replace(/\s/g, '').toLowerCase()}@example.com`
-      // 🔴 'location' se ha eliminado porque no existe en HubSpot por defecto
     };
 
-    const cleaned = cleanProperties(properties);
+    console.log(`📤 ${count}. Enviando contacto ${character.name} con propiedades:`, properties);
 
     try {
       // Crear en la cuenta MAIN
-      const main = await hubspotClient.crm.contacts.basicApi.create({ properties: cleaned });
+      const main = await hubspotClient.crm.contacts.basicApi.create({ properties });
 
       // Crear también en la cuenta MIRROR
-      const mirror = await hubspotClientMirror.crm.contacts.basicApi.create({ properties: cleaned });
+      const mirror = await hubspotClientMirror.crm.contacts.basicApi.create({ properties });
 
       results.push({
         name: character.name,
@@ -48,7 +49,10 @@ export async function createContactsFromCharacters() {
         error: error.message
       });
     }
+
+    count++;
   }
 
   return results;
 }
+
