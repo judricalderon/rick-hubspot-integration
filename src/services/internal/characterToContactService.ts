@@ -10,8 +10,8 @@ export async function createContactsFromCharacters() {
   for (const character of characters) {
     // Separar nombre en firstname y lastname
     const nameParts = character.name.trim().split(' ');
-    const firstname = nameParts[0];
-    const lastname = nameParts[1] || '';
+    const [firstname, ...lastnameParts] = character.name.trim().split(' ');
+    const lastname = lastnameParts.join(' ');
 
     // Normalizar status y gender con valores válidos
     const status = ['Alive', 'Dead', 'unknown'].includes(character.status) ? character.status : 'unknown';
