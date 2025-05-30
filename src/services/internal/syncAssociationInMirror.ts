@@ -48,35 +48,35 @@ export const syncAssociationInMirror = async (
     // 3. Obtener compañía en cuenta principal
     const companyMain = await hubspotClient.crm.companies.basicApi.getById(
       toObjectId.toString(),
-      ['domain']
+      ['location_id']
     );
-    const domain = companyMain.properties?.domain;
-    if (!domain) {
-      console.warn(`⚠️ Compañía sin dominio, no se puede buscar en mirror.`);
+    const locationId = companyMain.properties?.location_id;
+    if (!locationId) {
+      console.warn(`⚠️ Compañía sin location_id, no se puede buscar en mirror.`);
       return;
     }
-    console.log(`🌐 Dominio de la compañía (main): ${domain}`);
+    console.log(`📍 location_id de la compañía (main): ${locationId}`);
 
-    // 4. Buscar compañía en mirror por dominio
+    // 4. Buscar compañía en mirror por location_id
     const companySearch = await hubspotClientMirror.crm.companies.searchApi.doSearch({
       filterGroups: [
         {
           filters: [
             {
-              propertyName: 'domain',
+              propertyName: 'location_id',
               operator: FilterOperatorEnum.Eq,
-              value: domain
+              value: locationId
             }
           ]
         }
       ],
-      properties: ['domain'],
+      properties: ['location_id'],
       limit: 1
     });
 
     const companyMirror = companySearch.results[0];
     if (!companyMirror) {
-      console.warn(`⚠️ Compañía con dominio ${domain} no encontrada en mirror.`);
+      console.warn(`⚠️ Compañía con location_id ${locationId} no encontrada en mirror.`);
       return;
     }
     console.log(`✅ Compañía encontrada en mirror con ID: ${companyMirror.id}`);

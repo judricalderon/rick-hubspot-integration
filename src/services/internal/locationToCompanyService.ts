@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { getFilteredCharacters } from '../client/rickandmorty/characterService';
 import { hubspotClient } from '../client/hubspot/hubspotClient';
-import { hubspotClientMirror } from '../client/hubspot/hubspotClientMirror';
 
 function cleanProperties(properties: { [key: string]: string | null }): { [key: string]: string } {
   const cleaned: { [key: string]: string } = {};

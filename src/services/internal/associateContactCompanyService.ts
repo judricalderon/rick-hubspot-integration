@@ -34,7 +34,6 @@ export async function associateContactsToCompanies() {
     const locationName = normalize(char.location?.name);
 
     if (!locationName || locationName === 'unknown') {
-      console.warn(`⚠️ Ubicación inválida para personaje "${char.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'invalid location' });
       continue;
     }
@@ -44,12 +43,10 @@ export async function associateContactsToCompanies() {
       const fullName = `${contact.properties?.firstname || ''} ${contact.properties?.lastname || ''}`.trim();
       const normalizedFullName = normalize(fullName);
       const match = normalizedFullName === charNameNormalized;
-      console.log(`🔍 Comparando: contacto="${normalizedFullName}" vs personaje="${charNameNormalized}" → match: ${match}`);
       return match;
     });
 
     if (matchingContacts.length === 0) {
-      console.warn(`❌ Contacto no encontrado para "${char.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'contact not found' });
       continue;
     }
@@ -57,7 +54,6 @@ export async function associateContactsToCompanies() {
     const company = companies.find(c => normalize(c.properties?.name) === locationName);
 
     if (!company) {
-      console.warn(`❌ Compañía no encontrada para "${char.location.name}"`);
       results.push({ contact: char.name, company: char.location.name, status: 'company not found' });
       continue;
     }
