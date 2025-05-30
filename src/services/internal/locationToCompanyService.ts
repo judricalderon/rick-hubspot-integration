@@ -44,12 +44,11 @@ export async function createCompaniesFromLocations() {
       const cleaned = cleanProperties(properties);
 
       const main = await hubspotClient.crm.companies.basicApi.create({ properties: cleaned });
-      const mirror = await hubspotClientMirror.crm.companies.basicApi.create({ properties: cleaned });
+      
 
       results.push({
         location: location.name,
         mainId: main.id,
-        mirrorId: mirror.id,
         status: 'synced'
       });
 

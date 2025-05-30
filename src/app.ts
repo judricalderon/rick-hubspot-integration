@@ -2,14 +2,12 @@ import express from 'express';
 import dotenv from 'dotenv';
 
 import syncRoutes from './routes/syncRoutes';
-import { getFilteredCharacters } from './services/client/rickandmorty/characterService';
+import { webhookHandler } from './controllers/webhookController'; // Webhook separado
+
 import { getAllContacts, deleteAllContacts } from './services/client/hubspot/hubspotService';
 import { createContactsFromCharacters } from './services/internal/characterToContactService';
 import { createCompaniesFromLocations } from './services/internal/locationToCompanyService';
 import { associateContactsToCompanies } from './services/internal/associateContactCompanyService';
-
-import { hubspotClient } from './services/client/hubspot/hubspotClient';
-import { hubspotClientMirror } from './services/client/hubspot/hubspotClientMirror';
 
 dotenv.config();
 
@@ -18,102 +16,17 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Rutas de sincronización externa
+// 🔁 Webhook principal (se recomienda mover a /webhook si se desea aislar)
+app.post('/', webhookHandler);
+
+// 🔄 Rutas organizadas por dominio funcional
 app.use('/sync', syncRoutes);
 
-// 🔹 Ruta base (GET)
 app.get('/', (_, res) => {
   res.send('🚀 Rick & HubSpot Integration API funcionando');
 });
 
-// 🔹 Endpoint para webhooks (POST)
-app.post('/', async (req, res) => {
-  const events = req.body;
-
-  console.log('📨 Webhook recibido:', JSON.stringify(events, null, 2));
-
-  const readOnlyFields = ['createdate', 'hs_object_id', 'lastmodifieddate'];
-
-  function cleanProperties(properties: { [key: string]: string | null }, allowed: string[]): { [key: string]: string } {
-    const cleaned: { [key: string]: string } = {};
-    for (const key of allowed) {
-      const value = properties[key];
-      if (value !== null && !readOnlyFields.includes(key)) {
-        cleaned[key] = value;
-      }
-    }
-    return cleaned;
-  }
-
-  try {
-    for (const event of events) {
-      const { subscriptionType, objectId } = event;
-
-      if (subscriptionType === 'contact.creation') {
-        const contact = await hubspotClient.crm.contacts.basicApi.getById(objectId, [
-          'firstname',
-          'lastname',
-          'email',
-          'character_id',
-          'character_species',
-          'status_character',
-          'character_gender'
-        ]);
-
-        const cleaned = cleanProperties(contact.properties, [
-          'firstname',
-          'lastname',
-          'email',
-          'character_id',
-          'character_species',
-          'status_character',
-          'character_gender'
-        ]);
-
-        console.log('🧾 Contacto limpio:', cleaned);
-        await hubspotClientMirror.crm.contacts.basicApi.create({ properties: cleaned });
-
-      } else if (subscriptionType === 'company.creation') {
-        const company = await hubspotClient.crm.companies.basicApi.getById(objectId, [
-          'location_id',
-          'name',
-          'location_type',
-          'dimension',
-          'creation_date'
-        ]);
-
-        const cleaned = cleanProperties(company.properties, [
-          'location_id',
-          'name',
-          'location_type',
-          'dimension',
-          'creation_date'
-        ]);
-
-        console.log('🏢 Compañía limpia:', cleaned);
-        await hubspotClientMirror.crm.companies.basicApi.create({ properties: cleaned });
-      }
-    }
-
-    res.status(200).send('✅ Webhook procesado');
-  } catch (error) {
-    console.error('❌ Error procesando webhook:', error);
-    res.status(500).send('Error al procesar el webhook');
-  }
-});
-
-// 🔹 Obtener personajes filtrados (solo IDs primos o 1)
-app.get('/characters', async (_, res) => {
-  try {
-    const characters = await getFilteredCharacters();
-    res.json(characters);
-  } catch (error) {
-    console.error('Error al obtener personajes:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-});
-
-// 🔹 Obtener contactos existentes en HubSpot
+// 🔍 Obtener todos los contactos desde la cuenta principal
 app.get('/hubspot/contacts', async (_, res) => {
   try {
     const contacts = await getAllContacts();
@@ -124,7 +37,7 @@ app.get('/hubspot/contacts', async (_, res) => {
   }
 });
 
-// 🔹 Crear contactos a partir de personajes
+// 🔄 Sincronización manual desde personajes y ubicaciones
 app.get('/hubspot/sync/contacts', async (_, res) => {
   try {
     const result = await createContactsFromCharacters();
@@ -135,7 +48,6 @@ app.get('/hubspot/sync/contacts', async (_, res) => {
   }
 });
 
-// 🔹 Crear compañías a partir de ubicaciones
 app.get('/hubspot/sync/companies', async (_, res) => {
   try {
     const result = await createCompaniesFromLocations();
@@ -146,7 +58,6 @@ app.get('/hubspot/sync/companies', async (_, res) => {
   }
 });
 
-// 🔹 Asociar contactos con compañías
 app.get('/hubspot/sync/associations', async (_, res) => {
   try {
     const result = await associateContactsToCompanies();
@@ -157,7 +68,7 @@ app.get('/hubspot/sync/associations', async (_, res) => {
   }
 });
 
-// 🔹 Eliminar todos los contactos
+// ❌ Eliminar todos los contactos (uso limitado para pruebas)
 app.delete('/hubspot/delete/contacts', async (_, res) => {
   try {
     const result = await deleteAllContacts();
@@ -167,6 +78,7 @@ app.delete('/hubspot/delete/contacts', async (_, res) => {
   }
 });
 
+// 🚀 Lanzar servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
